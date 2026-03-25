@@ -72,6 +72,8 @@ let state = {
   agents: {},       // { agentId: { status, startTime, task, branch, prNumber } }
   events: [],       // { time, type, agentId, message }
   metrics: { prsCreated: 0, prsMerged: 0, agentRuns: 0, totalMinutes: 0 },
+  taskQueue: [],    // { id, agentId, prompt, priority, createdAt, status: 'queued'|'running'|'done' }
+  delegationRules: [], // { fromAgent, toAgent, trigger: 'on_complete', taskPrompt }
   startedAt: new Date().toISOString(),
 };
 
@@ -212,6 +214,12 @@ bot.onText(/^\/(start|help)$/, (msg) => {
 /launch \`agent-id\` — Start an agent
 /stop \`agent-id\` — Stop an agent
 /logs \`agent-id\` — Last 50 lines of output
+
+*Autonomous Delegation*
+/delegate \`agent-id\` \`prompt\` — Assign a task (auto-launches or queues)
+/chain \`agent1\` -> \`agent2\` \`prompt\` — Auto-launch agent2 when agent1 completes
+/queue — View pending tasks & chains
+/clearqueue — Clear all queued tasks & chains
 
 *Pull Requests*
 /prs — List open PRs
@@ -621,6 +629,188 @@ async function generateWeeklyReport() {
   log('Weekly report generated');
 }
 
+// ── /delegate <agent-id> <prompt> ──────────────────────────────────────────
+
+bot.onText(/^\/delegate (\S+)\s+(.+)$/s, async (msg, match) => {
+  if (!auth(msg)) return;
+
+  const agentId = match[1].trim().toLowerCase();
+  const prompt = match[2].trim();
+
+  if (!AGENTS[agentId]) {
+    send(`❌ Unknown agent: \`${agentId}\`\nUse /agents to see the roster.`);
+    return;
+  }
+
+  const taskId = `task-${Date.now()}`;
+  const task = { id: taskId, agentId, prompt, priority: 1, createdAt: new Date().toISOString(), status: 'queued' };
+
+  if (!state.taskQueue) state.taskQueue = [];
+  state.taskQueue.push(task);
+  saveState();
+
+  // If agent is idle, launch immediately
+  if (!isAgentRunning(agentId)) {
+    await launchAgentWithPrompt(agentId, prompt, taskId);
+    send(`🚀 Delegated to \`${agentId}\`: ${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}`);
+  } else {
+    const position = state.taskQueue.filter(t => t.agentId === agentId && t.status === 'queued').length;
+    send(`📋 Queued for \`${agentId}\` (position #${position}): ${prompt.substring(0, 100)}${prompt.length > 100 ? '...' : ''}`);
+  }
+
+  addEvent('delegate', agentId, `📋 Task delegated to ${AGENTS[agentId].icon} \`${agentId}\``);
+});
+
+// ── /chain <agent1> -> <agent2> <prompt> ──────────────────────────────────
+
+bot.onText(/^\/chain (\S+)\s*->\s*(\S+)\s+(.+)$/s, async (msg, match) => {
+  if (!auth(msg)) return;
+
+  const fromAgent = match[1].trim().toLowerCase();
+  const toAgent = match[2].trim().toLowerCase();
+  const taskPrompt = match[3].trim();
+
+  if (!AGENTS[fromAgent]) { send(`❌ Unknown agent: \`${fromAgent}\``); return; }
+  if (!AGENTS[toAgent]) { send(`❌ Unknown agent: \`${toAgent}\``); return; }
+
+  if (!state.delegationRules) state.delegationRules = [];
+  state.delegationRules.push({
+    id: `rule-${Date.now()}`,
+    fromAgent,
+    toAgent,
+    trigger: 'on_complete',
+    taskPrompt,
+    createdAt: new Date().toISOString(),
+    active: true,
+  });
+  saveState();
+
+  send(`🔗 Chain created: when \`${fromAgent}\` completes → auto-launch \`${toAgent}\`\nTask: ${taskPrompt.substring(0, 120)}${taskPrompt.length > 120 ? '...' : ''}`);
+  addEvent('chain', fromAgent, `🔗 Chain: ${AGENTS[fromAgent].icon} \`${fromAgent}\` → ${AGENTS[toAgent].icon} \`${toAgent}\``);
+});
+
+// ── /queue — show pending tasks ───────────────────────────────────────────
+
+bot.onText(/^\/queue$/, (msg) => {
+  if (!auth(msg)) return;
+
+  const queued = (state.taskQueue || []).filter(t => t.status === 'queued');
+  const rules = (state.delegationRules || []).filter(r => r.active);
+
+  if (queued.length === 0 && rules.length === 0) {
+    send(`📋 No queued tasks or active chains.`);
+    return;
+  }
+
+  let text = `📋 *Task Queue & Chains*\n\n`;
+
+  if (queued.length > 0) {
+    text += `*Queued Tasks (${queued.length}):*\n`;
+    queued.forEach((t, i) => {
+      text += `${i + 1}. ${AGENTS[t.agentId]?.icon || '🤖'} \`${t.agentId}\` — ${t.prompt.substring(0, 60)}${t.prompt.length > 60 ? '...' : ''}\n`;
+    });
+    text += '\n';
+  }
+
+  if (rules.length > 0) {
+    text += `*Active Chains (${rules.length}):*\n`;
+    rules.forEach(r => {
+      text += `🔗 \`${r.fromAgent}\` → \`${r.toAgent}\`: ${r.taskPrompt.substring(0, 60)}${r.taskPrompt.length > 60 ? '...' : ''}\n`;
+    });
+  }
+
+  send(text);
+});
+
+// ── /clearqueue — remove all queued tasks and chains ──────────────────────
+
+bot.onText(/^\/clearqueue$/, (msg) => {
+  if (!auth(msg)) return;
+  const queuedCount = (state.taskQueue || []).filter(t => t.status === 'queued').length;
+  const rulesCount = (state.delegationRules || []).filter(r => r.active).length;
+  state.taskQueue = (state.taskQueue || []).filter(t => t.status !== 'queued');
+  (state.delegationRules || []).forEach(r => { r.active = false; });
+  saveState();
+  send(`🗑️ Cleared ${queuedCount} queued tasks and ${rulesCount} chains.`);
+});
+
+// ── Autonomous delegation helpers ─────────────────────────────────────────
+
+async function launchAgentWithPrompt(agentId, prompt, taskId) {
+  try {
+    sh(`tmux kill-session -t ${agentId} 2>/dev/null || true`);
+    sh(`tmux new-session -d -s ${agentId} -c "${PROJECT_DIR}"`);
+
+    const escapedPrompt = prompt.replace(/'/g, "'\\''").substring(0, 8000);
+    const launchCmd = `claude --worktree -p '${escapedPrompt}' --allowedTools "Read,Write,Edit,Bash,Glob,Grep"`;
+    sh(`tmux send-keys -t ${agentId} '${launchCmd}' Enter`);
+
+    state.agents[agentId] = {
+      status: 'running',
+      startTime: new Date().toISOString(),
+      task: prompt.substring(0, 200),
+      taskId,
+    };
+    state.metrics.agentRuns++;
+
+    // Mark task as running
+    if (taskId) {
+      const task = (state.taskQueue || []).find(t => t.id === taskId);
+      if (task) task.status = 'running';
+    }
+
+    saveState();
+    addEvent('launch', agentId, `${AGENTS[agentId].icon} \`${agentId}\` auto-launched`);
+    return true;
+  } catch (e) {
+    log(`Failed to auto-launch ${agentId}: ${e.message}`, 'error');
+    return false;
+  }
+}
+
+function processAgentCompletion(agentId) {
+  // Mark current task as done
+  const agentState = state.agents[agentId];
+  if (agentState?.taskId) {
+    const task = (state.taskQueue || []).find(t => t.id === agentState.taskId);
+    if (task) task.status = 'done';
+  }
+
+  // Check delegation chains: auto-launch chained agent
+  const rules = (state.delegationRules || []).filter(r => r.active && r.fromAgent === agentId);
+  rules.forEach(async (rule) => {
+    const taskId = `task-${Date.now()}`;
+    const task = {
+      id: taskId, agentId: rule.toAgent, prompt: rule.taskPrompt,
+      priority: 1, createdAt: new Date().toISOString(), status: 'queued',
+    };
+    state.taskQueue.push(task);
+
+    if (!isAgentRunning(rule.toAgent)) {
+      const launched = await launchAgentWithPrompt(rule.toAgent, rule.taskPrompt, taskId);
+      if (launched) {
+        send(`🔗 *Chain triggered:* \`${agentId}\` completed → auto-launching ${AGENTS[rule.toAgent].icon} \`${rule.toAgent}\`\nTask: ${rule.taskPrompt.substring(0, 100)}${rule.taskPrompt.length > 100 ? '...' : ''}`);
+      }
+    }
+    // One-shot: deactivate rule after firing
+    rule.active = false;
+    saveState();
+  });
+
+  // Check task queue: auto-launch next queued task for this agent
+  const nextTask = (state.taskQueue || []).find(t => t.agentId === agentId && t.status === 'queued');
+  if (nextTask && !rules.length) {
+    setTimeout(async () => {
+      if (!isAgentRunning(agentId)) {
+        const launched = await launchAgentWithPrompt(agentId, nextTask.prompt, nextTask.id);
+        if (launched) {
+          send(`📋 *Auto-delegated:* next queued task for ${AGENTS[agentId].icon} \`${agentId}\`\nTask: ${nextTask.prompt.substring(0, 100)}${nextTask.prompt.length > 100 ? '...' : ''}`);
+        }
+      }
+    }, 5000); // Brief delay to let tmux session clean up
+  }
+}
+
 // ── Inline keyboard callback handler ────────────────────────────────────────
 
 bot.on('callback_query', async (query) => {
@@ -746,6 +936,9 @@ cron.schedule('*/30 * * * *', () => {
       }
 
       saveState();
+
+      // Trigger autonomous delegation (queue + chains)
+      processAgentCompletion(id);
     }
   });
 });
@@ -817,6 +1010,40 @@ app.post('/api/action', (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
+});
+
+// Delegation endpoint (from dashboard)
+app.post('/api/delegate', async (req, res) => {
+  const { agentId, prompt } = req.body;
+
+  if (!agentId || !prompt) {
+    return res.status(400).json({ error: 'agentId and prompt required' });
+  }
+  if (!AGENTS[agentId]) {
+    return res.status(400).json({ error: `Unknown agent: ${agentId}` });
+  }
+
+  const taskId = `task-${Date.now()}`;
+  const task = { id: taskId, agentId, prompt, priority: 1, createdAt: new Date().toISOString(), status: 'queued' };
+
+  if (!state.taskQueue) state.taskQueue = [];
+  state.taskQueue.push(task);
+
+  if (!isAgentRunning(agentId)) {
+    await launchAgentWithPrompt(agentId, prompt, taskId);
+    res.json({ ok: true, taskId, message: `${agentId} launched with task` });
+  } else {
+    saveState();
+    res.json({ ok: true, taskId, message: `Task queued for ${agentId}` });
+  }
+});
+
+// Task queue endpoint
+app.get('/api/queue', (req, res) => {
+  res.json({
+    queue: (state.taskQueue || []).filter(t => t.status === 'queued'),
+    chains: (state.delegationRules || []).filter(r => r.active),
+  });
 });
 
 // Events stream endpoint
