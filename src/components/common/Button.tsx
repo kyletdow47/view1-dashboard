@@ -14,6 +14,7 @@ const buttonVariants = cva(
         secondary: 'bg-surface text-white border border-view1-border hover:bg-white/5',
         ghost: 'text-white hover:bg-white/5',
         danger: 'bg-red-600 text-white hover:bg-red-700',
+        outline: 'border border-view1-border text-white hover:bg-white/5',
       },
       size: {
         sm: 'text-xs px-3 py-1.5 gap-1.5',
