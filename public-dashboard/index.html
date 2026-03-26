@@ -1536,34 +1536,11 @@ const BIP_TIMELINE = [
 ];
 
 // ============================================================
-// STATE MANAGEMENT
+// STATE MANAGEMENT — Live Supabase Data
 // ============================================================
-let state = loadState();
-
-function loadState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Ensure tasks exist
-      if (!parsed.tasks || parsed.tasks.length === 0) {
-        parsed.tasks = getDefaultTasks();
-      } else {
-        // Merge new fields into existing tasks (preserve user edits to status/assignee)
-        const defaults = getDefaultTasks();
-        parsed.tasks = parsed.tasks.map(t => {
-          const def = defaults.find(d => d.id === t.id);
-          if (def && !t.goal) {
-            return { ...def, ...t, goal: def.goal, steps: def.steps, purpose: def.purpose };
-          }
-          return t;
-        });
-      }
-      return parsed;
-    }
-  } catch (e) { console.error('Failed to load state', e); }
-  return getDefaultState();
-}
+const API_BASE = '/api/data';
+let state = getDefaultState();
+let supabaseReady = false;
 
 function getDefaultState() {
   return {
@@ -1571,14 +1548,138 @@ function getDefaultState() {
     agents: AGENTS.reduce((acc, a) => { acc[a.id] = { status: 'idle', lastActive: null, taskCount: 0 }; return acc; }, {}),
     settings: { name: 'Kyle', email: 'kyle@view1.studio', timezone: 'America/Los_Angeles', theme: 'dark', notify_agents: true, notify_tasks: true, notify_deploy: true, notify_marketing: false },
     currentPage: 'dashboard',
-    calMonth: 2, // March (0-indexed)
+    calMonth: 2,
     calYear: 2026,
   };
 }
 
-function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.error('Failed to save', e); }
+// Fetch live data from Supabase via API bridge
+async function fetchSupabaseTasks() {
+  try {
+    const res = await fetch(`${API_BASE}?table=tasks&select=*&order=sort_order.asc&limit=200`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const tasks = await res.json();
+    return tasks.map(t => ({
+      id: t.id,
+      title: t.title,
+      desc: t.description || '',
+      goal: t.goal || '',
+      steps: Array.isArray(t.steps) ? t.steps : [],
+      purpose: t.purpose || '',
+      status: mapSupabaseStatus(t.status),
+      priority: (t.priority || 'p2').toUpperCase(),
+      category: t.category || 'infra',
+      phase: (t.phase || 'phase1').replace('phase', ''),
+      week: String(t.week || '1'),
+      assignee: t.assignee || 'unassigned',
+      due: t.due_date || '',
+    }));
+  } catch (e) {
+    console.error('Failed to fetch tasks from Supabase:', e);
+    return null;
+  }
 }
+
+function mapSupabaseStatus(status) {
+  const map = { 'todo': 'todo', 'backlog': 'backlog', 'queued': 'todo', 'in_progress': 'inprogress', 'running': 'inprogress', 'done': 'done', 'completed': 'done', 'failed': 'todo', 'blocked': 'backlog' };
+  return map[status] || 'backlog';
+}
+
+async function fetchSupabaseAgents() {
+  try {
+    const res = await fetch(`${API_BASE}?table=agents&select=*&order=department.asc&limit=50`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const agents = await res.json();
+    const agentMap = {};
+    agents.forEach(a => {
+      agentMap[a.id] = {
+        status: a.status || 'idle',
+        lastActive: a.last_active || a.updated_at || null,
+        taskCount: a.tasks_completed || 0,
+      };
+    });
+    return agentMap;
+  } catch (e) {
+    console.error('Failed to fetch agents from Supabase:', e);
+    return null;
+  }
+}
+
+async function loadStateFromSupabase() {
+  const [tasks, agents] = await Promise.all([fetchSupabaseTasks(), fetchSupabaseAgents()]);
+  if (tasks) {
+    state.tasks = tasks;
+    supabaseReady = true;
+  }
+  if (agents) {
+    // Merge with local AGENTS definitions (keep desc from local, status from Supabase)
+    for (const [id, data] of Object.entries(agents)) {
+      if (state.agents[id]) {
+        state.agents[id] = { ...state.agents[id], ...data };
+      } else {
+        state.agents[id] = data;
+      }
+    }
+  }
+  // Restore UI prefs from localStorage
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.settings) state.settings = parsed.settings;
+      if (parsed.currentPage) state.currentPage = parsed.currentPage;
+      if (parsed.calMonth !== undefined) state.calMonth = parsed.calMonth;
+      if (parsed.calYear !== undefined) state.calYear = parsed.calYear;
+    }
+  } catch (e) {}
+  return state;
+}
+
+async function updateTaskInSupabase(taskId, updates) {
+  try {
+    const supaUpdates = {};
+    if (updates.status !== undefined) {
+      const reverseMap = { 'backlog': 'backlog', 'todo': 'todo', 'inprogress': 'in_progress', 'review': 'in_progress', 'done': 'done' };
+      supaUpdates.status = reverseMap[updates.status] || updates.status;
+    }
+    if (updates.assignee !== undefined) supaUpdates.assignee = updates.assignee;
+    supaUpdates.updated_at = new Date().toISOString();
+
+    await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table: 'tasks', action: 'update', data: supaUpdates, match: `id=eq.${taskId}` }),
+    });
+  } catch (e) {
+    console.error('Failed to update task in Supabase:', e);
+  }
+}
+
+function saveState() {
+  // Save UI prefs to localStorage (not task data — that's in Supabase)
+  try {
+    const uiState = { settings: state.settings, currentPage: state.currentPage, calMonth: state.calMonth, calYear: state.calYear };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(uiState));
+  } catch (e) {}
+}
+
+// Auto-refresh from Supabase every 30 seconds
+setInterval(async () => {
+  const tasks = await fetchSupabaseTasks();
+  if (tasks) {
+    state.tasks = tasks;
+    renderPage(state.currentPage);
+  }
+  const agents = await fetchSupabaseAgents();
+  if (agents) {
+    for (const [id, data] of Object.entries(agents)) {
+      if (state.agents[id]) state.agents[id] = { ...state.agents[id], ...data };
+    }
+    if (state.currentPage === 'dashboard' || state.currentPage === 'agents' || state.currentPage === 'hq') {
+      renderPage(state.currentPage);
+    }
+  }
+}, 30000);
 
 // ============================================================
 // NAVIGATION
@@ -2352,7 +2453,7 @@ function dropTask(e, col) {
   e.currentTarget.classList.remove('drag-over');
   if (!draggedTaskId) return;
   const task = state.tasks.find(t => t.id === draggedTaskId);
-  if (task) { task.status = col; saveState(); renderKanban(); }
+  if (task) { task.status = col; saveState(); updateTaskInSupabase(task.id, { status: col }); renderKanban(); }
   draggedTaskId = null;
 }
 
@@ -3264,11 +3365,12 @@ document.getElementById('task-detail-overlay').addEventListener('click', functio
 // ============================================================
 // INIT
 // ============================================================
-(function init() {
+(async function init() {
   // Apply theme
   if (state.settings.theme === 'light') document.body.classList.add('light');
 
-  // Render initial page
+  // Load live data from Supabase, then render
+  await loadStateFromSupabase();
   navigate(state.currentPage || 'dashboard');
 })();
 </script>
