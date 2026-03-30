@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="zinc">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Sort — View1 Sort</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Page-specific styles ── */
+
+    /* Two-column layout inside .content */
+    .ai-sort-layout {
+      display: flex;
+      gap: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* ── Left column ── */
+    .ai-sort-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 32px 0;
+      overflow-y: auto;
+      min-width: 0;
+    }
+
+    .ai-sort-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .ai-icon-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--accent) 20%, var(--surface-high));
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .ai-sort-title-block {
+      flex: 1;
+    }
+
+    .ai-sort-title {
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .ai-sort-subtitle {
+      font-size: 13.5px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      line-height: 1.5;
+      max-width: 520px;
+    }
+
+    .ai-sort-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .ai-sort-action-link {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color var(--t-micro);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ai-sort-action-link:hover {
+      color: var(--text-dim);
+    }
+
+    /* ── Drop zone ── */
+    .dropzone-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 24px;
+    }
+
+    .dropzone {
+      flex: 1;
+      min-height: 300px;
+      border: 1.5px dashed var(--outline);
+      border-radius: var(--radius-lg);
+      background-color: color-mix(in srgb, var(--surface) 60%, transparent);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      cursor: pointer;
+      transition:
+        background-color var(--t-medium),
+        border-color var(--t-medium);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dropzone::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 80%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .dropzone:hover,
+    .dropzone.drag-over {
+      background-color: color-mix(in srgb, var(--surface-high) 70%, transparent);
+      border-color: var(--accent);
+    }
+
+    .dropzone:hover .dropzone-icon,
+    .dropzone.drag-over .dropzone-icon {
+      color: var(--primary);
+    }
+
+    .dropzone-icon {
+      width: 40px;
+      height: 40px;
+      color: var(--text-muted);
+      transition: color var(--t-medium);
+    }
+
+    .dropzone-label {
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    .dropzone-hint {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 380px;
+    }
+
+    .dropzone-formats {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .format-pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background-color: var(--surface-high);
+      border: 1px solid var(--outline-v);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Bottom bar ── */
+    .sort-bottom-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 24px;
+    }
+
+    .sort-file-count {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .btn-run-sort {
+      flex: 1;
+      height: 48px;
+      background-color: var(--accent);
+      color: var(--on-primary);
+      border-radius: var(--radius-md);
+      border: none;
+      font-weight: 600;
+      font-size: 15px;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: box-shadow var(--t-micro), transform var(--t-micro), filter var(--t-micro);
+      box-shadow: var(--shadow-2);
+      letter-spacing: 0.01em;
+    }
+
+    .btn-run-sort:hover {
+      box-shadow: var(--shadow-3);
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .btn-run-sort:active {
+      transform: translateY(0);
+    }
+
+    /* ── Footer ── */
+    .ai-sort-footer {
+      flex-shrink: 0;
+      border-top: 1px solid var(--outline-v);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background-color: var(--surface-low);
+    }
+
+    .progress-outer {
+      flex: 1;
+      height: 6px;
+      background-color: var(--surface-high);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-inner {
+      height: 100%;
+      width: 7%; /* 1/14 sorted */
+      background: linear-gradient(90deg, var(--primary-c), var(--primary));
+      border-radius: 999px;
+      transition: width 0.5s ease;
+    }
+
+    .footer-stat {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .footer-stat strong {
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .footer-eta {
+      font-size: 12.5px;
+      color: var(--primary);
+      font-weight: 600;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ── Right panel ── */
+    .photo-queue-panel {
+      width: 320px;
+      flex-shrink: 0;
+      border-left: 1px solid var(--outline-v);
+      display: flex;
+      flex-direction: column;
+      background-color: var(--surface-low);
+      overflow: hidden;
+    }
+
+    .queue-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 16px 12px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--outline-v);
+    }
+
+    .queue-panel-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .queue-filter-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background-color: transparent;
+      border: 1px solid var(--outline-v);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: background-color var(--t-micro), color var(--t-micro);
+    }
+
+    .queue-filter-btn:hover {
+      background-color: var(--surface-high);
+      color: var(--text);
+    }
+
+    /* Tabs */
+    .queue-tabs {
+      display: flex;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--outline-v);
+      flex-shrink: 0;
+      gap: 0;
+    }
+
+    .queue-tab {
+      padding: 10px 10px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color var(--t-micro), border-color var(--t-micro);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    .queue-tab:hover {
+      color: var(--text-dim);
+    }
+
+    .queue-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-count {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 999px;
+      background-color: var(--surface-high);
+      color: var(--text-muted);
+    }
+
+    .queue-tab.active .tab-count {
+      background-color: color-mix(in srgb, var(--accent) 20%, transparent);
+      color: var(--primary);
+    }
+
+    /* Queue list */
+    .queue-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      border-radius: var(--radius-sm);
+      transition: background-color var(--t-micro);
+      cursor: default;
+    }
+
+    .queue-item:hover {
+      background-color: var(--surface-high);
+    }
+
+    .queue-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .queue-thumb-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+    }
+
+    .queue-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .queue-item-name {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-item-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .queue-item-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .queue-dismiss {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background-color: var(--surface-high);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: opacity var(--t-micro), background-color var(--t-micro);
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .queue-item:hover .queue-dismiss {
+      opacity: 1;
+    }
+
+    .queue-dismiss:hover {
+      background-color: var(--surface-highest);
+      color: var(--text);
+    }
+
+    /* Processing pulse animation */
+    @keyframes pulse-opacity {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    .badge-processing {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      animation: pulse-opacity 1.8s ease-in-out infinite;
+    }
+
+    /* Queue bottom */
+    .queue-bottom {
+      flex-shrink: 0;
+      padding: 12px 16px;
+      border-top: 1px solid var(--outline-v);
+    }
+
+    .queue-storage-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .queue-storage-text {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-dim);
+    }
+
+    .queue-storage-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .queue-progress-outer {
+      height: 5px;
+      background-color: var(--surface-high);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .queue-progress-inner {
+      height: 100%;
+      width: 7%;
+      background: linear-gradient(90deg, var(--primary-c), var(--primary));
+      border-radius: 999px;
+      transition: width 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ═══════════════════════════════════
+       SIDEBAR
+  ═══════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">V1</div>
+      <span class="sidebar-logo-text">View1 Sort</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <!-- Dashboard -->
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <!-- AI Sort (active) -->
+      <a href="ai-sort.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l1.5 3.5L17 8l-3.5 1.5L12 13l-1.5-3.5L7 8l3.5-1.5z"/>
+          <path d="M19 13l1 2.5L22.5 17l-2.5 1L19 20.5l-1-2.5L15.5 17l2.5-1z"/>
+          <path d="M5 17l.75 1.75L7.5 19.5l-1.75.75L5 22l-.75-1.75L2.5 19.5l1.75-.75z"/>
+        </svg>
+        AI Sort
+      </a>
+
+      <!-- Gallery -->
+      <a href="gallery.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        Gallery
+      </a>
+
+      <!-- Projects -->
+      <a href="projects.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+        </svg>
+        Projects
+      </a>
+
+      <!-- Clients -->
+      <a href="clients.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        Clients
+      </a>
+
+      <!-- Analytics -->
+      <a href="analytics.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+      </a>
+
+      <!-- Scheduling -->
+      <a href="#" class="nav-item" style="justify-content: space-between;">
+        <span style="display:flex;align-items:center;gap:10px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Scheduling
+        </span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">KD</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);" class="truncate">Kyle Dev</div>
+          <div style="font-size:11px;color:var(--text-muted);">Pro Plan</div>
+        </div>
+      </div>
+
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        Settings
+      </a>
+
+      <button class="btn-new-shoot">+ New Shoot</button>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════
+       MAIN AREA
+  ═══════════════════════════════════ -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="topbar-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Search files, sessions…" />
+        </div>
+        <span class="topbar-title">AI Sort</span>
+      </div>
+
+      <div class="topbar-actions">
+        <!-- Theme switcher -->
+        <div class="theme-switcher">
+          <button class="theme-dot theme-dot-warm" title="Warm theme" onclick="setTheme('warm')" id="dot-warm"></button>
+          <button class="theme-dot theme-dot-zinc active" title="Zinc theme" onclick="setTheme('zinc')" id="dot-zinc"></button>
+          <button class="theme-dot theme-dot-mono" title="Mono theme" onclick="setTheme('mono')" id="dot-mono"></button>
+        </div>
+
+        <!-- Bell -->
+        <button class="topbar-icon-btn" title="Notifications">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+        </button>
+
+        <!-- Upload -->
+        <button class="btn btn-primary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/>
+            <line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+          </svg>
+          Upload
+        </button>
+
+        <!-- Avatar -->
+        <div class="topbar-avatar">KD</div>
+      </div>
+    </header>
+
+    <!-- TWO-COLUMN BODY -->
+    <div class="ai-sort-layout">
+
+      <!-- ── LEFT MAIN CONTENT ── -->
+      <div class="ai-sort-main">
+
+        <!-- Header -->
+        <div class="ai-sort-header">
+          <div class="ai-icon-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3l1.5 3.5L17 8l-3.5 1.5L12 13l-1.5-3.5L7 8l3.5-1.5z"/>
+              <path d="M19 13l1 2.5L22.5 17l-2.5 1L19 20.5l-1-2.5L15.5 17l2.5-1z"/>
+              <path d="M5 17l.75 1.75L7.5 19.5l-1.75.75L5 22l-.75-1.75L2.5 19.5l1.75-.75z"/>
+            </svg>
+          </div>
+          <div class="ai-sort-title-block">
+            <div class="ai-sort-title">AI Neural Sort</div>
+            <div class="ai-sort-subtitle">Upload your photos and AI will sort, categorize, and organize them — all automatically.</div>
+            <div class="ai-sort-actions">
+              <span class="ai-sort-action-link">Try with sample →</span>
+              <span class="ai-sort-action-link">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                </svg>
+                Settings
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dropzone + bottom bar -->
+        <div class="dropzone-wrapper">
+          <div class="dropzone" id="dropzone" onclick="triggerFileInput()">
+            <!-- Cloud upload icon -->
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 16 12 12 8 16"/>
+              <line x1="12" y1="12" x2="12" y2="21"/>
+              <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+            </svg>
+            <span class="dropzone-label">Drop files or click to browse</span>
+            <span class="dropzone-hint">PNG, JPG, JPEG, RAW, CR2, NEF, ARW — up to 2000 files</span>
+            <div class="dropzone-formats">
+              <span class="format-pill">PNG</span>
+              <span class="format-pill">JPG</span>
+              <span class="format-pill">JPEG</span>
+              <span class="format-pill">RAW</span>
+              <span class="format-pill">CR2</span>
+              <span class="format-pill">NEF</span>
+              <span class="format-pill">ARW</span>
+            </div>
+          </div>
+          <input type="file" id="file-input" multiple accept=".png,.jpg,.jpeg,.raw,.cr2,.nef,.arw" style="display:none;" onchange="handleFileSelect(event)" />
+
+          <!-- Bottom bar -->
+          <div class="sort-bottom-bar">
+            <span class="sort-file-count" id="file-count-label">0 files selected</span>
+            <button class="btn-run-sort" onclick="runAISort()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3l1.5 3.5L17 8l-3.5 1.5L12 13l-1.5-3.5L7 8l3.5-1.5z"/>
+                <path d="M19 13l1 2.5L22.5 17l-2.5 1L19 20.5l-1-2.5L15.5 17l2.5-1z"/>
+              </svg>
+              ✦ Run AI Sort
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /ai-sort-main -->
+
+      <!-- ── RIGHT PANEL — PHOTO QUEUE ── -->
+      <aside class="photo-queue-panel">
+
+        <div class="queue-panel-header">
+          <span class="queue-panel-title">Photo Queue</span>
+          <button class="queue-filter-btn" title="Filter queue">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="queue-tabs">
+          <button class="queue-tab active" onclick="setQueueTab(this)">
+            All <span class="tab-count">123</span>
+          </button>
+          <button class="queue-tab" onclick="setQueueTab(this)">
+            Sorted <span class="tab-count">89</span>
+          </button>
+          <button class="queue-tab" onclick="setQueueTab(this)">
+            Processing <span class="tab-count">28</span>
+          </button>
+          <button class="queue-tab" onclick="setQueueTab(this)">
+            Queued <span class="tab-count">6</span>
+          </button>
+        </div>
+
+        <!-- List -->
+        <div class="queue-list">
+
+          <!-- Sorted items -->
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#1a2240 0%,#2d3a6e 50%,#1e2d5a 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">DSC_07234.CR2</div>
+              <div class="queue-item-meta">2.4 MB · Portraits</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-green">sorted</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#2a1a10 0%,#5c3520 50%,#3d2418 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">DSC_07235.CR2</div>
+              <div class="queue-item-meta">3.1 MB · Getting Ready</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-green">sorted</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#101a12 0%,#1e3a24 50%,#162c1a 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">IMG_4521.NEF</div>
+              <div class="queue-item-meta">4.8 MB · Ceremony</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-green">sorted</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#1a1025 0%,#3b2060 50%,#2a1845 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">A7R_00981.ARW</div>
+              <div class="queue-item-meta">8.2 MB · Reception</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-green">sorted</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Processing items (pulsing badge) -->
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#251810 0%,#4a2e18 50%,#362010 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">DSC_07286.CR2</div>
+              <div class="queue-item-meta">3.7 MB</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-processing">processing</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#0e1a20 0%,#1c3548 50%,#142838 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">IMG_4588.NEF</div>
+              <div class="queue-item-meta">5.3 MB</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-processing">processing</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- More sorted -->
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#1e1208 0%,#3e2810 50%,#2c1c0c 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">A7R_00992.ARW</div>
+              <div class="queue-item-meta">9.1 MB · Family Formals</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-green">sorted</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <!-- Queued items -->
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#181818 0%,#2e2e2e 50%,#222222 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">DSC_07301.CR2</div>
+              <div class="queue-item-meta">2.9 MB</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-muted">queued</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#0d1a14 0%,#1e3828 50%,#152c1e 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">IMG_4610.NEF</div>
+              <div class="queue-item-meta">6.4 MB</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-muted">queued</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+          <div class="queue-item">
+            <div class="queue-thumb">
+              <div class="queue-thumb-inner" style="background:linear-gradient(135deg,#1a1530 0%,#342a60 50%,#261e48 100%);"></div>
+            </div>
+            <div class="queue-item-info">
+              <div class="queue-item-name">A7R_01024.ARW</div>
+              <div class="queue-item-meta">7.8 MB</div>
+            </div>
+            <div class="queue-item-right">
+              <span class="badge badge-green">sorted</span>
+              <button class="queue-dismiss">✕</button>
+            </div>
+          </div>
+
+        </div><!-- /queue-list -->
+
+        <!-- Queue bottom progress -->
+        <div class="queue-bottom">
+          <div class="queue-storage-row">
+            <span class="queue-storage-text">214.6 MB</span>
+            <span class="queue-storage-sub">1 / 14 sorted</span>
+          </div>
+          <div class="queue-progress-outer">
+            <div class="queue-progress-inner" id="queue-progress"></div>
+          </div>
+        </div>
+
+      </aside><!-- /photo-queue-panel -->
+
+    </div><!-- /ai-sort-layout -->
+
+    <!-- FOOTER -->
+    <footer class="ai-sort-footer">
+      <div class="footer-stat">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <strong>123</strong> files total &nbsp;·&nbsp; <strong>89</strong> sorted &nbsp;·&nbsp; <strong>28</strong> processing &nbsp;·&nbsp; <strong>6</strong> queued
+      </div>
+      <div style="flex:1;"></div>
+      <div class="progress-outer">
+        <div class="progress-inner"></div>
+      </div>
+      <div class="footer-eta">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        Estimated: 2m 34s remaining
+      </div>
+    </footer>
+
+  </div><!-- /main -->
+
+</div><!-- /app-layout -->
+
+<script>
+  /* ── Theme Switcher ── */
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme === 'warm' ? '' : theme);
+    if (theme === 'warm') {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    ['warm', 'zinc', 'mono'].forEach(t => {
+      document.getElementById('dot-' + t)?.classList.remove('active');
+    });
+    document.getElementById('dot-' + theme)?.classList.add('active');
+    localStorage.setItem('v1-theme', theme);
+  }
+
+  /* ── Restore saved theme ── */
+  (function() {
+    const saved = localStorage.getItem('v1-theme');
+    if (saved && saved !== 'zinc') setTheme(saved);
+  })();
+
+  /* ── Queue tab switcher ── */
+  function setQueueTab(el) {
+    document.querySelectorAll('.queue-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  /* ── Dropzone drag events ── */
+  const dz = document.getElementById('dropzone');
+  ['dragenter', 'dragover'].forEach(evt => {
+    dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  });
+  ['dragleave', 'drop'].forEach(evt => {
+    dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.remove('drag-over'); });
+  });
+  dz.addEventListener('drop', e => {
+    const files = e.dataTransfer?.files;
+    if (files?.length) updateFileCount(files.length);
+  });
+
+  /* ── File input ── */
+  function triggerFileInput() {
+    document.getElementById('file-input').click();
+  }
+
+  function handleFileSelect(e) {
+    updateFileCount(e.target.files.length);
+  }
+
+  function updateFileCount(n) {
+    document.getElementById('file-count-label').textContent =
+      n === 1 ? '1 file selected' : n + ' files selected';
+  }
+
+  /* ── Run AI Sort (visual demo) ── */
+  function runAISort() {
+    const btn = document.querySelector('.btn-run-sort');
+    btn.textContent = '⚡ Sorting…';
+    btn.style.opacity = '0.75';
+    btn.style.cursor = 'not-allowed';
+    setTimeout(() => {
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 3.5L17 8l-3.5 1.5L12 13l-1.5-3.5L7 8l3.5-1.5z"/><path d="M19 13l1 2.5L22.5 17l-2.5 1L19 20.5l-1-2.5L15.5 17l2.5-1z"/></svg> ✦ Run AI Sort';
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+    }, 2000);
+  }
+</script>
+
+</body>
+</html>

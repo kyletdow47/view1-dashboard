@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects — View1 Sort</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Projects page-specific styles ── */
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .project-card {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-1);
+      transition: box-shadow var(--t-medium), transform var(--t-medium);
+    }
+
+    .project-card:hover {
+      box-shadow: var(--shadow-3);
+      transform: translateY(-3px);
+    }
+
+    .project-thumb {
+      height: 200px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 12px;
+    }
+
+    /* Unique warm gradients per card */
+    .thumb-wedding    { background: linear-gradient(135deg, #3d1c06 0%, #7a3a10 35%, #c46e2a 65%, #e9a45e 100%); }
+    .thumb-realestate { background: linear-gradient(135deg, #1a2a1a 0%, #2d4a2d 40%, #4a7a3d 70%, #8ab87a 100%); }
+    .thumb-travel     { background: linear-gradient(135deg, #0d1a2e 0%, #1a3a5e 35%, #2e6494 65%, #5a9ac5 100%); }
+    .thumb-corporate  { background: linear-gradient(135deg, #1c1c2e 0%, #2d2d4a 40%, #4a4a7a 70%, #7a7aab 100%); }
+    .thumb-alpine     { background: linear-gradient(135deg, #0d1a1a 0%, #0f2e3a 40%, #1a5a6e 70%, #3a8fa8 100%); }
+    .thumb-editorial  { background: linear-gradient(135deg, #1e0d1e 0%, #3a1a3a 35%, #6e3a5a 65%, #a86488 100%); }
+
+    /* Subtle photo-texture overlay */
+    .project-thumb::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
+      pointer-events: none;
+    }
+
+    .project-body {
+      padding: 16px;
+    }
+
+    .project-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+
+    .project-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .project-client {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .project-date {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .project-divider {
+      height: 1px;
+      background-color: var(--outline-v);
+      margin-bottom: 12px;
+    }
+
+    .project-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      margin-bottom: 12px;
+    }
+
+    .project-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .project-stat-item svg {
+      width: 13px;
+      height: 13px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .project-stat-item span {
+      font-weight: 500;
+    }
+
+    .project-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .project-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color var(--t-micro), gap var(--t-micro);
+    }
+
+    .project-link:hover {
+      color: var(--primary);
+      gap: 7px;
+    }
+
+    /* Page header row */
+    .page-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--outline-v);
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    .page-header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .page-header-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--surface-high);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-md);
+      padding: 7px 12px;
+      min-width: 200px;
+      transition: border-color var(--t-micro);
+    }
+
+    .page-header-search:focus-within {
+      border-color: var(--accent);
+    }
+
+    .page-header-search input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      flex: 1;
+    }
+
+    .page-header-search input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .page-header-search svg {
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Topbar left section */
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Sidebar user info text */
+    .sidebar-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar-user-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .sidebar-user-plan {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.2;
+    }
+
+    /* File type badge styling */
+    .badge-file {
+      background-color: rgba(0,0,0,0.45);
+      color: rgba(255,255,255,0.85);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 7px;
+      border-radius: 6px;
+      letter-spacing: 0.03em;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Chevron for scheduling nav item */
+    .nav-item-chevron {
+      margin-left: auto;
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">V1</div>
+      <span class="sidebar-logo-text">View1 Sort</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <!-- Dashboard -->
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <!-- AI Sort -->
+      <a href="ai-sort.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l1.5 4.5H18l-3.75 2.75L15.75 15 12 12.25 8.25 15l1.5-4.75L6 7.5h4.5L12 3z"/>
+          <path d="M5 19l1 2M19 19l-1 2M5 19l-1-2M19 19l1-2"/>
+        </svg>
+        AI Sort
+      </a>
+
+      <!-- Gallery -->
+      <a href="gallery.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        Gallery
+      </a>
+
+      <!-- Projects — active -->
+      <a href="projects.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        Projects
+      </a>
+
+      <!-- Clients -->
+      <a href="clients.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Clients
+      </a>
+
+      <!-- Analytics -->
+      <a href="analytics.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+      </a>
+
+      <!-- Scheduling -->
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Scheduling
+        <svg class="nav-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">KD</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Kyle Dev</div>
+          <div class="sidebar-user-plan">Pro Plan</div>
+        </div>
+      </div>
+
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </a>
+
+      <button class="btn-new-shoot" onclick="window.location='ai-sort.html'">+ New Shoot</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Search anything…" />
+        </div>
+        <span class="topbar-title">Projects</span>
+      </div>
+
+      <div class="topbar-actions">
+        <!-- Theme switcher -->
+        <div class="theme-switcher">
+          <div class="theme-dot theme-dot-warm active" title="Warm" onclick="setTheme('')" id="dot-warm"></div>
+          <div class="theme-dot theme-dot-zinc" title="Zinc" onclick="setTheme('zinc')" id="dot-zinc"></div>
+          <div class="theme-dot theme-dot-mono" title="Mono" onclick="setTheme('mono')" id="dot-mono"></div>
+        </div>
+
+        <!-- Bell -->
+        <button class="topbar-icon-btn" title="Notifications">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+
+        <!-- Upload -->
+        <button class="btn btn-primary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Upload
+        </button>
+
+        <!-- Avatar -->
+        <div class="topbar-avatar">KD</div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Page Header -->
+      <div class="page-header-row">
+        <div>
+          <h1 class="page-title">All Projects</h1>
+          <p class="page-subtitle">7 projects · 4 active assignments</p>
+        </div>
+        <div class="page-header-controls">
+          <div class="page-header-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" placeholder="Search projects…" />
+          </div>
+          <button class="btn btn-ghost btn-sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+            Filter
+          </button>
+          <button class="btn btn-primary btn-sm">+ New Project</button>
+        </div>
+      </div>
+
+      <!-- Projects Grid -->
+      <div class="project-grid">
+
+        <!-- Card 1: Johnson Wedding -->
+        <div class="project-card">
+          <div class="project-thumb thumb-wedding">
+            <div class="project-thumb-overlay">
+              <span class="badge badge-green">Active</span>
+              <span class="badge-file">CR2·JPEG</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-title">Johnson Wedding</div>
+            <div class="project-meta">
+              <span class="project-client">Sarah Ahmad</span>
+              <span class="project-date">Jun 2024</span>
+            </div>
+            <div class="project-divider"></div>
+            <div class="project-stats">
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>847 photos</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+                <span>12.4 GB</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>847 selected</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>CR2+JPEG</span>
+              </div>
+            </div>
+            <div class="project-footer">
+              <a href="gallery.html" class="project-link">View Gallery →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: 123 Oak Street Listing -->
+        <div class="project-card">
+          <div class="project-thumb thumb-realestate">
+            <div class="project-thumb-overlay">
+              <span class="badge badge-amber">Past-Due</span>
+              <span class="badge-file">JPEG</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-title">123 Oak Street Listing</div>
+            <div class="project-meta">
+              <span class="project-client">Various Media</span>
+              <span class="project-date">Oct 2023</span>
+            </div>
+            <div class="project-divider"></div>
+            <div class="project-stats">
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>156 photos</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+                <span>2.1 GB</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>156 selected</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>JPEG</span>
+              </div>
+            </div>
+            <div class="project-footer">
+              <a href="gallery.html" class="project-link">View Gallery →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Portugal Travel Series -->
+        <div class="project-card">
+          <div class="project-thumb thumb-travel">
+            <div class="project-thumb-overlay">
+              <span class="badge badge-green">Active</span>
+              <span class="badge-file">RAW+JPEG</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-title">Portugal Travel Series</div>
+            <div class="project-meta">
+              <span class="project-client">Tony Hayden</span>
+              <span class="project-date">Mar 2024</span>
+            </div>
+            <div class="project-divider"></div>
+            <div class="project-stats">
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>432 photos</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+                <span>6.7 GB</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>318 selected</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>RAW+JPEG</span>
+              </div>
+            </div>
+            <div class="project-footer">
+              <a href="gallery.html" class="project-link">View Gallery →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Corporate Headshots -->
+        <div class="project-card">
+          <div class="project-thumb thumb-corporate">
+            <div class="project-thumb-overlay">
+              <span class="badge badge-blue">Delivered</span>
+              <span class="badge-file">JPEG</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-title">Corporate Headshots — Acme Inc</div>
+            <div class="project-meta">
+              <span class="project-client">Architect Studio</span>
+              <span class="project-date">Feb 2024</span>
+            </div>
+            <div class="project-divider"></div>
+            <div class="project-stats">
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>64 photos</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+                <span>1.7 GB</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>64 selected</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>JPEG</span>
+              </div>
+            </div>
+            <div class="project-footer">
+              <a href="gallery.html" class="project-link">View Gallery →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5: Alpine Solitude -->
+        <div class="project-card">
+          <div class="project-thumb thumb-alpine">
+            <div class="project-thumb-overlay">
+              <span class="badge badge-green">Active</span>
+              <span class="badge-file">RAW+DNG</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-title">Alpine Solitude</div>
+            <div class="project-meta">
+              <span class="project-client">Personal Project</span>
+              <span class="project-date">Jan 2024</span>
+            </div>
+            <div class="project-divider"></div>
+            <div class="project-stats">
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>3,105 photos</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+                <span>45.2 GB</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>3,105 selected</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>RAW+DNG</span>
+              </div>
+            </div>
+            <div class="project-footer">
+              <a href="gallery.html" class="project-link">View Gallery →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6: Noir & Silk Editorial -->
+        <div class="project-card">
+          <div class="project-thumb thumb-editorial">
+            <div class="project-thumb-overlay">
+              <span class="badge badge-green">Active</span>
+              <span class="badge-file">CR2+TIFF</span>
+            </div>
+          </div>
+          <div class="project-body">
+            <div class="project-title">Noir &amp; Silk Editorial</div>
+            <div class="project-meta">
+              <span class="project-client">Natalia Furie</span>
+              <span class="project-date">Nov 2023</span>
+            </div>
+            <div class="project-divider"></div>
+            <div class="project-stats">
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>1,890 photos</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+                <span>29.4 GB</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>1,890 selected</span>
+              </div>
+              <div class="project-stat-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>CR2+TIFF</span>
+              </div>
+            </div>
+            <div class="project-footer">
+              <a href="gallery.html" class="project-link">View Gallery →</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-layout -->
+
+<script>
+  // ── Theme Switcher ──
+  const themes = { '': 'dot-warm', 'zinc': 'dot-zinc', 'mono': 'dot-mono' };
+
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('v1-theme', theme);
+    Object.entries(themes).forEach(([t, dotId]) => {
+      document.getElementById(dotId).classList.toggle('active', t === theme);
+    });
+  }
+
+  // Load saved theme
+  (function() {
+    const saved = localStorage.getItem('v1-theme') || '';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

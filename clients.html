@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clients — View1 Sort</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Clients page-specific styles ── */
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .sidebar-user-plan { font-size: 11px; color: var(--text-muted); line-height: 1.2; }
+
+    .nav-item-chevron {
+      margin-left: auto;
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Stats row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stats-card {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      box-shadow: var(--shadow-1);
+    }
+
+    .stats-card-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stats-card-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    /* Table wrapper */
+    .table-wrapper {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-1);
+      margin-bottom: 28px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .table th {
+      text-align: left;
+      padding: 11px 20px;
+      font-weight: 600;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--outline-v);
+      background-color: var(--surface-low);
+    }
+
+    .table td {
+      padding: 13px 20px;
+      border-bottom: 1px solid color-mix(in srgb, var(--outline-v) 60%, transparent);
+      font-size: 13.5px;
+      vertical-align: middle;
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table tbody tr {
+      cursor: pointer;
+      transition: background-color var(--t-micro);
+    }
+
+    .table tbody tr:hover td {
+      background-color: color-mix(in srgb, var(--surface-high) 60%, transparent);
+    }
+
+    /* Client cell */
+    .client-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .client-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 11px;
+      flex-shrink: 0;
+      color: #fff;
+    }
+
+    .avatar-indigo  { background-color: #4f46e5; }
+    .avatar-emerald { background-color: #059669; }
+    .avatar-amber   { background-color: #d97706; }
+    .avatar-sky     { background-color: #0284c7; }
+    .avatar-rose    { background-color: #e11d48; }
+    .avatar-violet  { background-color: #7c3aed; }
+
+    .client-info-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .client-info-email {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.2;
+    }
+
+    /* Action buttons cell */
+    .action-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background-color: var(--surface-high);
+      border: 1px solid var(--outline-v);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color var(--t-micro), color var(--t-micro);
+      color: var(--text-muted);
+    }
+
+    .action-btn:hover {
+      background-color: var(--surface-highest);
+      color: var(--text);
+    }
+
+    .action-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    /* Bottom stats */
+    .bottom-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .bottom-stat-card {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      box-shadow: var(--shadow-1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .bottom-stat-left {}
+
+    .bottom-stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .bottom-stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .bottom-stat-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Page header row */
+    .page-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--outline-v);
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">V1</div>
+      <span class="sidebar-logo-text">View1 Sort</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <a href="ai-sort.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l1.5 4.5H18l-3.75 2.75L15.75 15 12 12.25 8.25 15l1.5-4.75L6 7.5h4.5L12 3z"/>
+          <path d="M5 19l1 2M19 19l-1 2M5 19l-1-2M19 19l1-2"/>
+        </svg>
+        AI Sort
+      </a>
+
+      <a href="gallery.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        Gallery
+      </a>
+
+      <a href="projects.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        Projects
+      </a>
+
+      <!-- Clients — active -->
+      <a href="clients.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Clients
+      </a>
+
+      <a href="analytics.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+      </a>
+
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Scheduling
+        <svg class="nav-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">KD</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Kyle Dev</div>
+          <div class="sidebar-user-plan">Pro Plan</div>
+        </div>
+      </div>
+
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </a>
+
+      <button class="btn-new-shoot" onclick="window.location='ai-sort.html'">+ New Shoot</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Search anything…" />
+        </div>
+        <span class="topbar-title">Clients</span>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="theme-switcher">
+          <div class="theme-dot theme-dot-warm active" title="Warm" onclick="setTheme('')" id="dot-warm"></div>
+          <div class="theme-dot theme-dot-zinc" title="Zinc" onclick="setTheme('zinc')" id="dot-zinc"></div>
+          <div class="theme-dot theme-dot-mono" title="Mono" onclick="setTheme('mono')" id="dot-mono"></div>
+        </div>
+
+        <button class="topbar-icon-btn" title="Notifications">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+
+        <button class="btn btn-primary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Upload
+        </button>
+
+        <div class="topbar-avatar">KD</div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Page Header -->
+      <div class="page-header-row">
+        <div>
+          <h1 class="page-title">Client Profiles</h1>
+          <p class="page-subtitle">Collect and track clients from your assignments</p>
+        </div>
+        <div>
+          <button class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Invite Client
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stats-card">
+          <div class="stats-card-label">Active Packs</div>
+          <div class="stats-card-value">12</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-label">Upcoming Shoots</div>
+          <div class="stats-card-value">8</div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-label">Pending Outreach</div>
+          <div class="stats-card-value">5</div>
+        </div>
+      </div>
+
+      <!-- Clients Table -->
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Email</th>
+              <th>Galleries</th>
+              <th>Last Access</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- Row 1 -->
+            <tr onclick="window.location='client-dashboard.html'">
+              <td>
+                <div class="client-cell">
+                  <div class="client-avatar avatar-indigo">SM</div>
+                  <div>
+                    <div class="client-info-name">Sarah Mitchell</div>
+                    <div class="client-info-email">sarah@signmail.com</div>
+                  </div>
+                </div>
+              </td>
+              <td style="color:var(--text-dim); font-size:13px;">sarah@signmail.com</td>
+              <td style="color:var(--text-dim); font-size:13px;">3 galleries</td>
+              <td style="color:var(--text-muted); font-size:13px;">May 16, 2024</td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>
+                <div class="action-cell">
+                  <button class="action-btn" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="Message">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="More">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 2 -->
+            <tr onclick="window.location='client-dashboard.html'">
+              <td>
+                <div class="client-cell">
+                  <div class="client-avatar avatar-emerald">JR</div>
+                  <div>
+                    <div class="client-info-name">James Rodriguez</div>
+                    <div class="client-info-email">james@allstudios.com</div>
+                  </div>
+                </div>
+              </td>
+              <td style="color:var(--text-dim); font-size:13px;">james@allstudios.com</td>
+              <td style="color:var(--text-dim); font-size:13px;">7 galleries</td>
+              <td style="color:var(--text-muted); font-size:13px;">May 23, 2026</td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>
+                <div class="action-cell">
+                  <button class="action-btn" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="Message">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="More">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 3 -->
+            <tr onclick="window.location='client-dashboard.html'">
+              <td>
+                <div class="client-cell">
+                  <div class="client-avatar avatar-amber">SW</div>
+                  <div>
+                    <div class="client-info-name">Stacy Watson</div>
+                    <div class="client-info-email">stacy@watsonfamily.co</div>
+                  </div>
+                </div>
+              </td>
+              <td style="color:var(--text-dim); font-size:13px;">stacy@watsonfamily.co</td>
+              <td style="color:var(--text-dim); font-size:13px;">3 galleries</td>
+              <td style="color:var(--text-muted); font-size:13px;">May 22, 2026</td>
+              <td><span class="badge badge-amber">Pending</span></td>
+              <td>
+                <div class="action-cell">
+                  <button class="action-btn" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="Message">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="More">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 4 -->
+            <tr onclick="window.location='client-dashboard.html'">
+              <td>
+                <div class="client-cell">
+                  <div class="client-avatar avatar-sky">DL</div>
+                  <div>
+                    <div class="client-info-name">David Lin</div>
+                    <div class="client-info-email">david@dlin.com</div>
+                  </div>
+                </div>
+              </td>
+              <td style="color:var(--text-dim); font-size:13px;">david@dlin.com</td>
+              <td style="color:var(--text-dim); font-size:13px;">1 gallery</td>
+              <td style="color:var(--text-muted); font-size:13px;">May 15, 2026</td>
+              <td><span class="badge badge-green">Active</span></td>
+              <td>
+                <div class="action-cell">
+                  <button class="action-btn" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="Message">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="More">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 5 -->
+            <tr onclick="window.location='client-dashboard.html'">
+              <td>
+                <div class="client-cell">
+                  <div class="client-avatar avatar-rose">AT</div>
+                  <div>
+                    <div class="client-info-name">Ava Thompson</div>
+                    <div class="client-info-email">ava@thompson.net</div>
+                  </div>
+                </div>
+              </td>
+              <td style="color:var(--text-dim); font-size:13px;">ava@thompson.net</td>
+              <td style="color:var(--text-dim); font-size:13px;">1 gallery</td>
+              <td style="color:var(--text-muted); font-size:13px;">May 12, 2026</td>
+              <td><span class="badge badge-blue">Follow-up</span></td>
+              <td>
+                <div class="action-cell">
+                  <button class="action-btn" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="Message">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="More">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 6 -->
+            <tr onclick="window.location='client-dashboard.html'">
+              <td>
+                <div class="client-cell">
+                  <div class="client-avatar avatar-violet">AR</div>
+                  <div>
+                    <div class="client-info-name">Alex Root</div>
+                    <div class="client-info-email">alex@address.org</div>
+                  </div>
+                </div>
+              </td>
+              <td style="color:var(--text-dim); font-size:13px;">alex@address.org</td>
+              <td style="color:var(--text-dim); font-size:13px;">5 galleries</td>
+              <td style="color:var(--text-muted); font-size:13px;">May 15, 2026</td>
+              <td><span class="badge badge-amber">Pending</span></td>
+              <td>
+                <div class="action-cell">
+                  <button class="action-btn" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="Message">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </button>
+                  <button class="action-btn" title="More">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bottom Stats -->
+      <div class="bottom-stats">
+        <div class="bottom-stat-card">
+          <div class="bottom-stat-left">
+            <div class="bottom-stat-label">Active Projects</div>
+            <div class="bottom-stat-value">12 projects</div>
+            <div class="bottom-stat-sub">All Shoots Culled</div>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:color-mix(in srgb,var(--accent) 15%,transparent);display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="bottom-stat-card">
+          <div class="bottom-stat-left">
+            <div class="bottom-stat-label">Returning Clients</div>
+            <div class="bottom-stat-value">6 clients</div>
+            <div class="bottom-stat-sub">Out of 10 total clients</div>
+          </div>
+          <div style="width:40px;height:40px;border-radius:50%;background:color-mix(in srgb,var(--accent) 15%,transparent);display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-layout -->
+
+<script>
+  const themes = { '': 'dot-warm', 'zinc': 'dot-zinc', 'mono': 'dot-mono' };
+
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('v1-theme', theme);
+    Object.entries(themes).forEach(([t, dotId]) => {
+      document.getElementById(dotId).classList.toggle('active', t === theme);
+    });
+  }
+
+  (function() {
+    const saved = localStorage.getItem('v1-theme') || '';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

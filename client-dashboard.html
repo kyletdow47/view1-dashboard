@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Dashboard — View1 Sort</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Client Dashboard page-specific styles ── */
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 12.5px; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .sidebar-user-plan { font-size: 11px; color: var(--text-muted); line-height: 1.2; }
+
+    .nav-item-chevron {
+      margin-left: auto;
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* ── Client Profile Header ── */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--outline-v);
+      margin-bottom: 20px;
+    }
+
+    .profile-header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .profile-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 3px color-mix(in srgb, #4f46e5 25%, transparent);
+    }
+
+    .profile-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 5px;
+    }
+
+    .profile-contact {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .profile-contact-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12.5px;
+      color: var(--text-dim);
+    }
+
+    .profile-contact-item svg {
+      width: 13px;
+      height: 13px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .profile-status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 7px;
+    }
+
+    /* ── Tab Row ── */
+    .tab-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      border-bottom: 1px solid var(--outline-v);
+      margin-bottom: 24px;
+    }
+
+    .tab-item {
+      padding: 9px 16px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      position: relative;
+      transition: color var(--t-micro);
+      border: none;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .tab-item:hover {
+      color: var(--text-dim);
+    }
+
+    .tab-item.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ── Stats Row ── */
+    .stats-4-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-box {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-1);
+    }
+
+    .stat-box-label {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .stat-box-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .stat-box-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .stat-box-sub.amber { color: #f59e0b; }
+    .stat-box-sub.green { color: #4ade80; }
+
+    /* ── Two-column layout ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .left-col {}
+    .right-col {}
+
+    /* Section header */
+    .section-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-hdr-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .section-hdr-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      transition: color var(--t-micro);
+    }
+
+    .section-hdr-link:hover { color: var(--primary); }
+
+    /* ── Map Placeholder ── */
+    .map-placeholder {
+      background-color: var(--surface-low);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      height: 300px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-1);
+    }
+
+    /* CSS map grid lines */
+    .map-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(83,68,57,0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(83,68,57,0.3) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+
+    /* Subtle road-like lines */
+    .map-placeholder::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(212,145,92,0.12) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(212,145,92,0.12) 2px, transparent 2px);
+      background-size: 108px 108px;
+    }
+
+    .map-dot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--bg);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      transform: translate(-50%, -50%);
+    }
+
+    .map-dot-pulse {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      opacity: 0.3;
+      transform: translate(-50%, -50%);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+      50% { transform: translate(-50%, -50%) scale(1.4); opacity: 0.1; }
+    }
+
+    .map-label-badge {
+      position: absolute;
+      background-color: var(--surface-high);
+      border: 1px solid var(--outline-v);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-dim);
+      white-space: nowrap;
+      transform: translate(-50%, -140%);
+      box-shadow: var(--shadow-1);
+    }
+
+    .map-legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+      padding: 0 4px;
+    }
+
+    .map-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .map-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Recent Projects (horizontal cards) ── */
+    .recent-projects {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .recent-project-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-1);
+      transition: box-shadow var(--t-medium), transform var(--t-medium);
+      cursor: pointer;
+    }
+
+    .recent-project-card:hover {
+      box-shadow: var(--shadow-2);
+      transform: translateY(-1px);
+    }
+
+    .recent-project-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .rp-thumb-1 { background: linear-gradient(135deg, #3d1c06, #c46e2a, #e9a45e); }
+    .rp-thumb-2 { background: linear-gradient(135deg, #1a3a5e, #2e6494, #5a9ac5); }
+
+    .recent-project-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .recent-project-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .recent-project-meta {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* ── Pending Tasks ── */
+    .tasks-panel {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-1);
+      margin-bottom: 20px;
+    }
+
+    .tasks-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tasks-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .tasks-badge {
+      background-color: color-mix(in srgb, var(--accent) 20%, transparent);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 4px;
+      border-bottom: 1px solid color-mix(in srgb, var(--outline-v) 50%, transparent);
+      transition: background-color var(--t-micro);
+      border-radius: var(--radius-sm);
+    }
+
+    .task-item:last-child { border-bottom: none; }
+
+    .task-item:hover { background-color: var(--surface-high); }
+
+    .task-checkbox {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--outline-v);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      cursor: pointer;
+      transition: border-color var(--t-micro);
+    }
+
+    .task-checkbox:hover { border-color: var(--accent); }
+
+    .task-priority-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .task-priority-dot.high   { background-color: #f59e0b; }
+    .task-priority-dot.medium { background-color: #60a5fa; }
+    .task-priority-dot.low    { background-color: var(--text-muted); }
+
+    .task-text {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    /* ── Recent Activity ── */
+    .activity-panel {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-1);
+    }
+
+    .activity-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+
+    /* Timeline line */
+    .activity-list::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background-color: var(--outline-v);
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 8px 4px;
+      position: relative;
+    }
+
+    .activity-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: var(--surface-high);
+      border: 1px solid var(--outline-v);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      z-index: 1;
+      color: var(--accent);
+    }
+
+    .activity-icon svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .activity-content {
+      flex: 1;
+      padding-top: 4px;
+    }
+
+    .activity-text {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    .activity-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 16px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .breadcrumb a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--t-micro);
+    }
+
+    .breadcrumb a:hover { color: var(--text-dim); }
+
+    .breadcrumb-sep {
+      font-size: 11px;
+      color: var(--outline);
+    }
+
+    .breadcrumb-current {
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">V1</div>
+      <span class="sidebar-logo-text">View1 Sort</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+
+      <a href="ai-sort.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l1.5 4.5H18l-3.75 2.75L15.75 15 12 12.25 8.25 15l1.5-4.75L6 7.5h4.5L12 3z"/>
+          <path d="M5 19l1 2M19 19l-1 2M5 19l-1-2M19 19l1-2"/>
+        </svg>
+        AI Sort
+      </a>
+
+      <a href="gallery.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        Gallery
+      </a>
+
+      <a href="projects.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        Projects
+      </a>
+
+      <!-- Clients — active (viewing a client) -->
+      <a href="clients.html" class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Clients
+      </a>
+
+      <a href="analytics.html" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+      </a>
+
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Scheduling
+        <svg class="nav-item-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">KD</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Kyle Dev</div>
+          <div class="sidebar-user-plan">Pro Plan</div>
+        </div>
+      </div>
+
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </a>
+
+      <button class="btn-new-shoot" onclick="window.location='ai-sort.html'">+ New Shoot</button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="Search anything…" />
+        </div>
+        <span class="topbar-title">Client Dashboard</span>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="theme-switcher">
+          <div class="theme-dot theme-dot-warm active" title="Warm" onclick="setTheme('')" id="dot-warm"></div>
+          <div class="theme-dot theme-dot-zinc" title="Zinc" onclick="setTheme('zinc')" id="dot-zinc"></div>
+          <div class="theme-dot theme-dot-mono" title="Mono" onclick="setTheme('mono')" id="dot-mono"></div>
+        </div>
+
+        <button class="topbar-icon-btn" title="Notifications">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+
+        <button class="btn btn-primary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Upload
+        </button>
+
+        <div class="topbar-avatar">KD</div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb">
+        <a href="clients.html">Clients</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Sarah Mitchell</span>
+      </nav>
+
+      <!-- Client Profile Header -->
+      <div class="profile-header">
+        <div class="profile-header-left">
+          <div class="profile-avatar">SM</div>
+          <div>
+            <div class="profile-name">Sarah Mitchell</div>
+            <div class="profile-contact">
+              <div class="profile-contact-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                sarah@signmail.com
+              </div>
+              <div class="profile-contact-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.58 3.41 2 2 0 0 1 3.55 1.22h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 15.92z"/>
+                </svg>
+                +1 (323) 534-4411
+              </div>
+              <div class="profile-contact-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                Portland, CA
+              </div>
+            </div>
+            <div class="profile-status-row">
+              <span class="badge badge-green">Active</span>
+              <span style="font-size:11.5px; color:var(--text-muted);">Client since Jan 2024</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary">
+          View Client Portal
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Tab Row -->
+      <div class="tab-row">
+        <button class="tab-item active">Overview</button>
+        <button class="tab-item">Gallery</button>
+        <button class="tab-item">Projects</button>
+        <button class="tab-item">Quotes</button>
+        <button class="tab-item">Invoices</button>
+        <button class="tab-item">Notes</button>
+      </div>
+
+      <!-- Stats Row (4 cards) -->
+      <div class="stats-4-row">
+        <div class="stat-box">
+          <div class="stat-box-label">Active Packs</div>
+          <div class="stat-box-value">5</div>
+          <div class="stat-box-sub amber">2 overdue</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Upcoming Shoots</div>
+          <div class="stat-box-value">3</div>
+          <div class="stat-box-sub">Next: Apr 2025</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Successful Projects</div>
+          <div class="stat-box-value">4</div>
+          <div class="stat-box-sub">clients@engagement.com</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Relationship Status</div>
+          <div class="stat-box-value" style="font-size:20px;">Engaged</div>
+          <div class="stat-box-sub">Wedding Photography 2024-8</div>
+        </div>
+      </div>
+
+      <!-- Two-column layout -->
+      <div class="two-col">
+
+        <!-- Left column -->
+        <div class="left-col">
+
+          <!-- Shoot Locations -->
+          <div class="section-hdr">
+            <div class="section-hdr-title">Shoot Locations</div>
+            <a href="#" class="section-hdr-link">All Time →</a>
+          </div>
+
+          <div class="map-placeholder">
+            <!-- Dot 1 — Portland (main) -->
+            <div class="map-dot-pulse" style="left:30%;top:38%;background:#f59e0b;"></div>
+            <div class="map-dot" style="left:30%;top:38%;background:#f59e0b;"></div>
+            <div class="map-label-badge" style="left:30%;top:38%;">Portland, OR</div>
+
+            <!-- Dot 2 — San Francisco -->
+            <div class="map-dot-pulse" style="left:18%;top:62%;background:#4f46e5;"></div>
+            <div class="map-dot" style="left:18%;top:62%;background:#4f46e5;"></div>
+            <div class="map-label-badge" style="left:18%;top:62%;">San Francisco</div>
+
+            <!-- Dot 3 — Seattle -->
+            <div class="map-dot-pulse" style="left:52%;top:22%;background:#6b7280;"></div>
+            <div class="map-dot" style="left:52%;top:22%;background:#6b7280;"></div>
+            <div class="map-label-badge" style="left:52%;top:22%;">Seattle</div>
+
+            <!-- Dot 4 — Los Angeles -->
+            <div class="map-dot" style="left:72%;top:75%;background:#f59e0b;"></div>
+            <div class="map-label-badge" style="left:72%;top:75%;">Los Angeles</div>
+          </div>
+
+          <div class="map-legend">
+            <div class="map-legend-item">
+              <div class="map-legend-dot" style="background:#f59e0b;"></div>
+              Pending
+            </div>
+            <div class="map-legend-item">
+              <div class="map-legend-dot" style="background:#4f46e5;"></div>
+              Engaged
+            </div>
+            <div class="map-legend-item">
+              <div class="map-legend-dot" style="background:#6b7280;"></div>
+              Completed
+            </div>
+          </div>
+
+          <!-- Recent Projects -->
+          <div class="section-hdr mt-6">
+            <div class="section-hdr-title">Recent Projects</div>
+            <a href="projects.html" class="section-hdr-link">View All →</a>
+          </div>
+
+          <div class="recent-projects">
+            <div class="recent-project-card">
+              <div class="recent-project-thumb rp-thumb-1"></div>
+              <div class="recent-project-info">
+                <div class="recent-project-title">Wedding Planner — Ceremony &amp; Reception</div>
+                <div class="recent-project-meta">847 photos · Jun 2024 · CR2+JPEG</div>
+              </div>
+              <span class="badge badge-green">Approved</span>
+            </div>
+            <div class="recent-project-card">
+              <div class="recent-project-thumb rp-thumb-2"></div>
+              <div class="recent-project-info">
+                <div class="recent-project-title">Portugal Travel Series — Coastal Portraits</div>
+                <div class="recent-project-meta">432 photos · Mar 2024 · RAW+JPEG</div>
+              </div>
+              <span class="badge badge-amber">In Review</span>
+            </div>
+          </div>
+
+        </div><!-- /left-col -->
+
+        <!-- Right column -->
+        <div class="right-col">
+
+          <!-- Pending Tasks -->
+          <div class="tasks-panel">
+            <div class="tasks-header">
+              <div class="tasks-title">Pending Tasks</div>
+              <div class="tasks-badge">5</div>
+            </div>
+
+            <div class="task-item">
+              <div class="task-checkbox"></div>
+              <div class="task-priority-dot high"></div>
+              <div class="task-text">Finalize editing gallery plan</div>
+            </div>
+            <div class="task-item">
+              <div class="task-checkbox"></div>
+              <div class="task-priority-dot medium"></div>
+              <div class="task-text">Package client management pacts</div>
+            </div>
+            <div class="task-item">
+              <div class="task-checkbox"></div>
+              <div class="task-priority-dot medium"></div>
+              <div class="task-text">Return payment on receipt</div>
+            </div>
+            <div class="task-item">
+              <div class="task-checkbox"></div>
+              <div class="task-priority-dot low"></div>
+              <div class="task-text">Schedule model → mid-state overview</div>
+            </div>
+            <div class="task-item">
+              <div class="task-checkbox"></div>
+              <div class="task-priority-dot low"></div>
+              <div class="task-text">Program event portal draft</div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="activity-panel">
+            <div class="activity-title">Recent Activity</div>
+            <div class="activity-list">
+
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text">Viewed Wedding gallery</div>
+                  <div class="activity-time">2 days ago</div>
+                </div>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text">Added 3 engagement photos to gallery</div>
+                  <div class="activity-time">4 days ago</div>
+                </div>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text">Sent message about shoot schedule</div>
+                  <div class="activity-time">1 week ago</div>
+                </div>
+              </div>
+
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text">Approved 214 photos from Portugal series</div>
+                  <div class="activity-time">2 weeks ago</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div><!-- /right-col -->
+      </div><!-- /two-col -->
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app-layout -->
+
+<script>
+  // ── Tab switching ──
+  document.querySelectorAll('.tab-item').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // ── Task checkbox interaction ──
+  document.querySelectorAll('.task-checkbox').forEach(cb => {
+    cb.addEventListener('click', () => {
+      cb.style.backgroundColor = cb.style.backgroundColor ? '' : 'var(--accent)';
+      cb.style.borderColor = cb.style.borderColor === 'var(--accent)' ? '' : 'var(--accent)';
+      const text = cb.closest('.task-item').querySelector('.task-text');
+      text.style.textDecoration = text.style.textDecoration === 'line-through' ? '' : 'line-through';
+      text.style.color = text.style.color ? '' : 'var(--text-muted)';
+    });
+  });
+
+  // ── Theme Switcher ──
+  const themes = { '': 'dot-warm', 'zinc': 'dot-zinc', 'mono': 'dot-mono' };
+
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('v1-theme', theme);
+    Object.entries(themes).forEach(([t, dotId]) => {
+      document.getElementById(dotId).classList.toggle('active', t === theme);
+    });
+  }
+
+  (function() {
+    const saved = localStorage.getItem('v1-theme') || '';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="mono">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — View1 Sort</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* ── Login page layout ───────────────────────────── */
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .login-shell {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ── Left panel ──────────────────────────────────── */
+    .login-left {
+      width: 50%;
+      background: var(--surface-low);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .login-left-inner {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .login-logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--primary);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--bg);
+      letter-spacing: -0.03em;
+      flex-shrink: 0;
+    }
+
+    .login-logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .login-heading {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .login-subheading {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 0.01em;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .form-field input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: 8px;
+      padding: 11px 14px;
+      font-size: 14px;
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    .form-field input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 14%, transparent);
+    }
+
+    .form-field input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .password-toggle:hover {
+      color: var(--text);
+    }
+
+    .form-field input[type="password"] {
+      padding-right: 42px;
+    }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: -8px;
+      transition: color 0.15s;
+    }
+
+    .forgot-link:hover {
+      color: var(--text);
+    }
+
+    .btn-signin {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      margin-top: 4px;
+    }
+
+    .btn-signin:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-signin:active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--outline-v);
+    }
+
+    .btn-google {
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--outline-v);
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.15s, border-color 0.15s;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    }
+
+    .btn-google:hover {
+      background: var(--surface-high);
+      border-color: var(--outline);
+    }
+
+    .login-footer-text {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 24px;
+    }
+
+    .login-footer-text a {
+      color: var(--primary);
+      font-weight: 600;
+      transition: opacity 0.15s;
+    }
+
+    .login-footer-text a:hover {
+      opacity: 0.8;
+    }
+
+    .login-theme-switcher {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+    }
+
+    .login-theme-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-right: 2px;
+    }
+
+    /* ── Right panel ─────────────────────────────────── */
+    .login-right {
+      width: 50%;
+      position: relative;
+      background:
+        linear-gradient(
+          160deg,
+          #0a0a0a 0%,
+          #111010 20%,
+          #1a1410 40%,
+          #0d0d0d 70%,
+          #080808 100%
+        );
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    /* Simulated dark photography scene */
+    .login-right-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 30%, rgba(120, 80, 40, 0.25) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 20% 70%, rgba(60, 40, 20, 0.3) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 40% at 50% 80%, rgba(20, 15, 10, 0.8) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
+      z-index: 1;
+    }
+
+    /* Simulated photo texture dots */
+    .login-right-noise {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 25% 35%, rgba(200, 150, 80, 0.06) 1px, transparent 1px),
+        radial-gradient(circle at 75% 25%, rgba(180, 130, 70, 0.04) 1px, transparent 1px),
+        radial-gradient(circle at 55% 65%, rgba(100, 70, 40, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px, 60px 60px, 50px 50px;
+      z-index: 2;
+    }
+
+    /* Large ambient glow simulating light source in photo */
+    .login-right-glow {
+      position: absolute;
+      top: 15%;
+      right: 18%;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(220, 160, 80, 0.12) 0%, rgba(180, 120, 50, 0.06) 40%, transparent 70%);
+      z-index: 3;
+    }
+
+    .login-right-glow-2 {
+      position: absolute;
+      bottom: 30%;
+      left: 10%;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(100, 80, 60, 0.1) 0%, transparent 70%);
+      z-index: 3;
+    }
+
+    /* Floating stat badges */
+    .stat-badge {
+      position: absolute;
+      background: rgba(15, 13, 12, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 16px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stat-badge-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stat-badge-icon.green { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+    .stat-badge-icon.amber { background: rgba(251, 191, 36, 0.15);  color: #fbbf24; }
+    .stat-badge-icon.blue  { background: rgba(96, 165, 250, 0.15);  color: #60a5fa; }
+
+    .stat-badge-val {
+      font-size: 16px;
+      font-weight: 800;
+      color: #F0F0F0;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-badge-lbl {
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    .stat-badge-1 {
+      top: 14%;
+      left: 8%;
+      animation: float1 5s ease-in-out infinite;
+    }
+
+    .stat-badge-2 {
+      top: 36%;
+      right: 8%;
+      animation: float2 6s ease-in-out infinite;
+    }
+
+    .stat-badge-3 {
+      top: 58%;
+      left: 12%;
+      animation: float3 4.5s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+    @keyframes float2 {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+    @keyframes float3 {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-6px); }
+    }
+
+    /* Bottom text overlay */
+    .login-right-content {
+      position: relative;
+      z-index: 10;
+      padding: 40px 44px;
+      background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+    }
+
+    .login-right-headline {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      max-width: 380px;
+      margin-bottom: 10px;
+    }
+
+    .login-right-subtext {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      max-width: 340px;
+      line-height: 1.6;
+    }
+
+    /* AI sort indicator strip */
+    .ai-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,183,128,0.12);
+      border: 1px solid rgba(255,183,128,0.2);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #ffb780;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .ai-indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ffb780;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-shell">
+
+    <!-- ── LEFT: Login Form ───────────────────────────────────── -->
+    <div class="login-left">
+      <div class="login-left-inner">
+
+        <!-- Logo -->
+        <div class="login-logo">
+          <div class="login-logo-mark">V1</div>
+          <span class="login-logo-text">View1 Sort</span>
+        </div>
+
+        <!-- Heading -->
+        <h1 class="login-heading">Welcome back</h1>
+        <p class="login-subheading">Sign in to your View1 Sort account</p>
+
+        <!-- Form -->
+        <form class="login-form" onsubmit="handleSignIn(event)">
+
+          <!-- Email -->
+          <div class="form-field">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+            >
+          </div>
+
+          <!-- Password -->
+          <div class="form-field">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                id="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+              >
+              <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Toggle password visibility">
+                <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Forgot password -->
+          <a href="#" class="forgot-link">Forgot password?</a>
+
+          <!-- Sign in button -->
+          <button type="submit" class="btn-signin">Sign in</button>
+
+          <!-- Divider -->
+          <div class="login-divider">or</div>
+
+          <!-- Google OAuth -->
+          <button type="button" class="btn-google">
+            <!-- Google G icon -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+
+        </form>
+
+        <!-- Footer text -->
+        <p class="login-footer-text">
+          Don't have an account? <a href="#">Sign up</a>
+        </p>
+
+        <!-- Theme switcher -->
+        <div class="login-theme-switcher">
+          <span class="login-theme-label">Theme</span>
+          <div class="theme-switcher">
+            <div class="theme-dot theme-dot-warm" onclick="setTheme('')" title="Warm"></div>
+            <div class="theme-dot theme-dot-zinc" onclick="setTheme('zinc')" title="Zinc"></div>
+            <div class="theme-dot theme-dot-mono active" onclick="setTheme('mono')" title="Mono"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── RIGHT: Photo Hero ──────────────────────────────────── -->
+    <div class="login-right">
+
+      <!-- Background layers -->
+      <div class="login-right-bg"></div>
+      <div class="login-right-noise"></div>
+      <div class="login-right-glow"></div>
+      <div class="login-right-glow-2"></div>
+
+      <!-- Floating stat badge 1: Photos sorted -->
+      <div class="stat-badge stat-badge-1">
+        <div class="stat-badge-icon green">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-badge-val">24,810</div>
+          <div class="stat-badge-lbl">Photos sorted this week</div>
+        </div>
+      </div>
+
+      <!-- Floating stat badge 2: Time saved -->
+      <div class="stat-badge stat-badge-2">
+        <div class="stat-badge-icon amber">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-badge-val">138 hrs</div>
+          <div class="stat-badge-lbl">Saved with AI culling</div>
+        </div>
+      </div>
+
+      <!-- Floating stat badge 3: Revenue -->
+      <div class="stat-badge stat-badge-3">
+        <div class="stat-badge-icon blue">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-badge-val">$48,200</div>
+          <div class="stat-badge-lbl">Invoiced this month</div>
+        </div>
+      </div>
+
+      <!-- Bottom overlay content -->
+      <div class="login-right-content">
+        <div class="ai-indicator">
+          <div class="ai-indicator-dot"></div>
+          AI-Powered
+        </div>
+        <p class="login-right-headline">Sort, deliver, and get paid for your photography.</p>
+        <p class="login-right-subtext">AI-powered platform for professional photographers. From culling to client delivery in minutes, not hours.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Theme init ────────────────────────────────────────────
+    (function () {
+      // This page defaults to mono, but respect stored pref
+      const stored = localStorage.getItem('v1-theme');
+      if (stored !== null) {
+        document.documentElement.setAttribute('data-theme', stored);
+        updateDotActive(stored);
+      } else {
+        // Default this page to mono
+        document.documentElement.setAttribute('data-theme', 'mono');
+        updateDotActive('mono');
+      }
+    })();
+
+    function setTheme(theme) {
+      if (theme === '') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      localStorage.setItem('v1-theme', theme);
+      updateDotActive(theme);
+    }
+
+    function updateDotActive(theme) {
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+      if (theme === '')      document.querySelector('.theme-dot-warm')?.classList.add('active');
+      if (theme === 'zinc')  document.querySelector('.theme-dot-zinc')?.classList.add('active');
+      if (theme === 'mono')  document.querySelector('.theme-dot-mono')?.classList.add('active');
+    }
+
+    // ── Password toggle ───────────────────────────────────────
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const icon  = document.getElementById('eye-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerHTML = `
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+          <line x1="1" y1="1" x2="23" y2="23"/>
+        `;
+      } else {
+        input.type = 'password';
+        icon.innerHTML = `
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        `;
+      }
+    }
+
+    // ── Sign in handler ───────────────────────────────────────
+    function handleSignIn(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('.btn-signin');
+      btn.textContent = 'Signing in…';
+      btn.style.opacity = '0.7';
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 800);
+    }
+  </script>
+</body>
+</html>

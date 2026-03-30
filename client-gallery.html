@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Galleries — View1 Sort</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Client Gallery — Public Delivery Page ── */
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Nav */
+    .client-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 58px;
+      background-color: color-mix(in srgb, var(--surface-low) 90%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--outline-v);
+      gap: 24px;
+    }
+    .nav-breadcrumb {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .nav-breadcrumb span {
+      color: var(--primary);
+    }
+    .client-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .client-nav-links a {
+      padding: 6px 14px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-dim);
+      border-radius: var(--radius-md);
+      transition: background-color var(--t-micro), color var(--t-micro);
+    }
+    .client-nav-links a:hover {
+      background-color: var(--surface-high);
+      color: var(--text);
+    }
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .nav-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #4338ca;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .nav-username {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-dim);
+    }
+
+    /* Page Wrapper */
+    .client-page {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 48px 40px 80px;
+    }
+
+    /* Welcome section */
+    .welcome-section {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .welcome-title {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .welcome-subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    /* Section header */
+    .sec-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .sec-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sec-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .sec-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--primary);
+      opacity: 0.8;
+      transition: opacity var(--t-micro);
+    }
+    .sec-link:hover { opacity: 1; }
+
+    /* Gallery Cards */
+    .galleries-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+    .gallery-card {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: box-shadow var(--t-medium), transform var(--t-medium);
+    }
+    .gallery-card:hover {
+      box-shadow: var(--shadow-2);
+      transform: translateY(-3px);
+    }
+    .gallery-thumb {
+      height: 200px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .gallery-thumb-gradient {
+      width: 100%;
+      height: 100%;
+      background-size: 100% 100%;
+    }
+    .thumb-1 { background: linear-gradient(135deg, #d97706 0%, #b45309 30%, #7c3aed 70%, #4c1d95 100%); }
+    .thumb-2 { background: linear-gradient(135deg, #be185d 0%, #9d174d 30%, #d97706 70%, #92400e 100%); }
+    .thumb-3 { background: linear-gradient(135deg, #065f46 0%, #047857 30%, #0369a1 70%, #075985 100%); }
+
+    .gallery-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5) 100%);
+    }
+    .gallery-thumb-count {
+      position: absolute;
+      bottom: 10px;
+      right: 12px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .gallery-card-body {
+      padding: 16px 18px 18px;
+    }
+    .gallery-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .gallery-tags {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .gallery-link {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: gap var(--t-micro);
+    }
+    .gallery-link:hover { gap: 7px; }
+
+    /* Upcoming Shoots */
+    .shoots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .shoot-card {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: box-shadow var(--t-medium);
+    }
+    .shoot-card:hover { box-shadow: var(--shadow-2); }
+    .shoot-date-badge {
+      background-color: var(--surface-high);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      text-align: center;
+      flex-shrink: 0;
+      min-width: 52px;
+    }
+    .shoot-date-month {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .shoot-date-day {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .shoot-info {
+      flex: 1;
+    }
+    .shoot-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .shoot-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .shoot-photographer {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .check-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: rgba(74,222,128,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Bottom Grid: Invoices + Messages */
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+
+    .section-card {
+      background-color: var(--surface);
+      border: 1px solid var(--outline-v);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .section-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--outline-v);
+    }
+    .section-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Messages */
+    .message-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid color-mix(in srgb, var(--outline-v) 60%, transparent);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      transition: background-color var(--t-micro);
+      cursor: pointer;
+    }
+    .message-item:last-of-type { border-bottom: none; }
+    .message-item:hover { background-color: var(--surface-high); }
+    .msg-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--primary-c));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--on-primary);
+      flex-shrink: 0;
+    }
+    .msg-body { flex: 1; min-width: 0; }
+    .msg-sender {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .msg-role {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+    .msg-preview {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .msg-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .messages-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--outline-v);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* Invoices table footer */
+    .invoices-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--outline-v);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .pay-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      background-color: var(--primary-c);
+      color: var(--on-primary);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: box-shadow var(--t-micro);
+    }
+    .pay-btn:hover { box-shadow: var(--shadow-2); }
+
+    /* Footer */
+    .client-footer {
+      background-color: var(--surface-low);
+      border-top: 1px solid var(--outline-v);
+      padding: 28px 40px;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .footer-brand {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+    .footer-brand span { color: var(--primary); }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      font-size: 13px;
+      color: var(--text-muted);
+      transition: color var(--t-micro);
+    }
+    .footer-links a:hover { color: var(--text-dim); }
+    .footer-copy {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .footer-social {
+      display: flex;
+      gap: 12px;
+    }
+    .footer-social a {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: var(--surface-high);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: background-color var(--t-micro), color var(--t-micro);
+    }
+    .footer-social a:hover { background-color: var(--surface-highest); color: var(--text); }
+
+    /* Theme switcher (top-right of nav) */
+    .nav-theme-switcher {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <nav class="client-nav">
+    <div class="nav-breadcrumb">
+      view1sort <span>▸</span> Johnson Wedding
+    </div>
+    <div class="client-nav-links">
+      <a href="#">My Galleries</a>
+      <a href="#">Wishlist</a>
+      <a href="#">Messages</a>
+      <a href="#">Account</a>
+    </div>
+    <div class="nav-user">
+      <div class="nav-theme-switcher">
+        <div class="theme-dot theme-dot-warm active" title="Warm" onclick="setTheme('')"></div>
+        <div class="theme-dot theme-dot-zinc" title="Zinc" onclick="setTheme('zinc')"></div>
+        <div class="theme-dot theme-dot-mono" title="Mono" onclick="setTheme('mono')"></div>
+      </div>
+      <div class="nav-avatar">SR</div>
+      <span class="nav-username">Smith Radcliff</span>
+    </div>
+  </nav>
+
+  <!-- Main Page -->
+  <main class="client-page">
+
+    <!-- Welcome -->
+    <div class="welcome-section">
+      <div>
+        <h1 class="welcome-title">Welcome back, Sarah</h1>
+        <p class="welcome-subtitle">Your galleries are ready — browse, select favorites, and download your images.</p>
+      </div>
+      <a href="#" class="btn btn-ghost" style="border:1px solid var(--outline-v);white-space:nowrap;align-self:center;">
+        Browse All Galleries →
+      </a>
+    </div>
+
+    <!-- My Galleries -->
+    <section>
+      <div class="sec-head">
+        <div class="sec-title-row">
+          <span class="sec-title">My Galleries</span>
+          <span class="badge badge-green">Updated</span>
+        </div>
+      </div>
+      <div class="galleries-grid">
+
+        <!-- Card 1 -->
+        <div class="gallery-card">
+          <div class="gallery-thumb">
+            <div class="gallery-thumb-gradient thumb-1"></div>
+            <div class="gallery-thumb-overlay"></div>
+            <div class="gallery-thumb-count">243 photos</div>
+          </div>
+          <div class="gallery-card-body">
+            <div class="gallery-name">Wedding Ann</div>
+            <div class="gallery-tags">Portraits · Ceremony</div>
+            <a href="#" class="gallery-link">
+              View Gallery
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="gallery-card">
+          <div class="gallery-thumb">
+            <div class="gallery-thumb-gradient thumb-2"></div>
+            <div class="gallery-thumb-overlay"></div>
+            <div class="gallery-thumb-count">87 photos</div>
+          </div>
+          <div class="gallery-card-body">
+            <div class="gallery-name">Engagement Session</div>
+            <div class="gallery-tags">Moments · Sothings</div>
+            <a href="#" class="gallery-link" style="color:#f59e0b;">
+              Good Pending
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="gallery-card">
+          <div class="gallery-thumb">
+            <div class="gallery-thumb-gradient thumb-3"></div>
+            <div class="gallery-thumb-overlay"></div>
+            <div class="gallery-thumb-count">124 photos</div>
+          </div>
+          <div class="gallery-card-body">
+            <div class="gallery-name">Portrait Collection</div>
+            <div class="gallery-tags">Moments · Spring</div>
+            <a href="#" class="gallery-link">
+              View Gallery
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Upcoming Shoots -->
+    <section>
+      <div class="sec-head">
+        <div class="sec-title-row">
+          <span class="sec-title">Upcoming Shoots</span>
+        </div>
+        <a href="#" class="sec-link">View Calendar →</a>
+      </div>
+      <div class="shoots-grid">
+
+        <div class="shoot-card">
+          <div class="shoot-date-badge">
+            <div class="shoot-date-month">Aug</div>
+            <div class="shoot-date-day">02</div>
+          </div>
+          <div class="shoot-info">
+            <div class="shoot-title">Engagement Square</div>
+            <div class="shoot-meta">Garment Park · 2 hours · 1 outfit</div>
+            <div class="shoot-photographer">
+              <div class="check-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" style="width:8px;height:8px;"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              By: Kyle Photographer
+            </div>
+          </div>
+        </div>
+
+        <div class="shoot-card">
+          <div class="shoot-date-badge">
+            <div class="shoot-date-month">Aug</div>
+            <div class="shoot-date-day">02</div>
+          </div>
+          <div class="shoot-info">
+            <div class="shoot-title">Holiday Family Session</div>
+            <div class="shoot-meta">Portland · 3 hours · Family</div>
+            <div class="shoot-photographer">
+              <div class="check-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="3" style="width:8px;height:8px;"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              By: Kyle Photographer
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Invoices + Messages -->
+    <div class="bottom-grid">
+
+      <!-- Invoices -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <span class="section-card-title">Invoices &amp; Payments</span>
+          <span class="badge badge-amber">2 Pending</span>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:28px;height:18px;border-radius:4px;background:linear-gradient(135deg,#1a56db,#4c1d95);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0;">VISA</div>
+                  <span style="font-size:13px;color:var(--text-dim);">••••  4242</span>
+                </div>
+              </td>
+              <td style="font-size:13px;color:var(--text-muted);">Feb 22, 2024</td>
+              <td style="font-size:14px;font-weight:600;color:var(--text);">$5,200.00</td>
+              <td><span class="status-chip status-paid" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;background-color:rgba(74,222,128,0.12);color:#4ade80;">Paid</span></td>
+            </tr>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:28px;height:18px;border-radius:4px;background:linear-gradient(135deg,#d97706,#b45309);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0;">MC</div>
+                  <span style="font-size:13px;color:var(--text-dim);">••••  8891</span>
+                </div>
+              </td>
+              <td style="font-size:13px;color:var(--text-muted);">Mar 5, 2024</td>
+              <td style="font-size:14px;font-weight:600;color:var(--text);">$1,300.00</td>
+              <td>
+                <button class="pay-btn">Pay Now</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:28px;height:18px;border-radius:4px;background:linear-gradient(135deg,#1a56db,#4c1d95);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0;">VISA</div>
+                  <span style="font-size:13px;color:var(--text-dim);">••••  4242</span>
+                </div>
+              </td>
+              <td style="font-size:13px;color:var(--text-muted);">Feb 10, 2024</td>
+              <td style="font-size:14px;font-weight:600;color:var(--text);">$98.00</td>
+              <td>
+                <button class="pay-btn">Pay Now</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:28px;height:18px;border-radius:4px;background:linear-gradient(135deg,#065f46,#047857);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;flex-shrink:0;">AMX</div>
+                  <span style="font-size:13px;color:var(--text-dim);">••••  3311</span>
+                </div>
+              </td>
+              <td style="font-size:13px;color:var(--text-muted);">Jan 14, 2024</td>
+              <td style="font-size:14px;font-weight:600;color:var(--text);">$5,100.00</td>
+              <td><span class="status-chip status-paid" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;background-color:rgba(74,222,128,0.12);color:#4ade80;">Paid</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="invoices-footer">
+          <button class="btn btn-ghost btn-sm" style="font-size:12px;border:1px solid var(--outline-v);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Send Message
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <span class="section-card-title">Messages</span>
+          <span class="badge badge-blue">2 new</span>
+        </div>
+
+        <div class="message-item">
+          <div class="msg-avatar">KP</div>
+          <div class="msg-body">
+            <div>
+              <span class="msg-sender">Kyle</span>
+              <span class="msg-role">— Photographer</span>
+            </div>
+            <div class="msg-preview">Ready to view your final gallery! Let me know what you think...</div>
+          </div>
+          <div class="msg-time">2 days ago</div>
+        </div>
+
+        <div class="message-item">
+          <div class="msg-avatar">KP</div>
+          <div class="msg-body">
+            <div>
+              <span class="msg-sender">Kyle</span>
+              <span class="msg-role">— Photographer</span>
+            </div>
+            <div class="msg-preview">Thanks! I'll upload the rest by this weekend. Looking forward to...</div>
+          </div>
+          <div class="msg-time">1 week ago</div>
+        </div>
+
+        <div class="messages-footer">
+          <button class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Show Message
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /bottom-grid -->
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="client-footer">
+    <div class="footer-inner">
+      <div class="footer-brand"><span>View1 Sort</span> — KyleDevStudios</div>
+      <div class="footer-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Help Center</a>
+      </div>
+      <div class="footer-copy">© 2024 View1 Sort / KyleDevStudios</div>
+      <div class="footer-social">
+        <a href="#" title="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="#" title="Twitter / X">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M4 4l16 16M4 20 20 4"/></svg>
+        </a>
+        <a href="#" title="Facebook">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('v1-theme', t);
+    document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+    const map = { '': 'theme-dot-warm', 'zinc': 'theme-dot-zinc', 'mono': 'theme-dot-mono' };
+    const sel = document.querySelector('.' + map[t]);
+    if (sel) sel.classList.add('active');
+  }
+  (function() {
+    const saved = localStorage.getItem('v1-theme') || '';
+    setTheme(saved);
+  })();
+</script>
+</body>
+</html>
